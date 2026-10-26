@@ -25,7 +25,7 @@ L'outil est une **page web** qui s'ouvre dans votre navigateur (Chrome, Firefox,
 
 ## Récupérer l'outil sur GitHub
 
-GitHub est le site où se trouve l'outil. Il suffit de récupérer **un seul fichier**, `Actes_a_rechercher.html`, et de le garder sur votre ordinateur. Le fichier se trouve dans le dossier `Actes_a_rechercher` du dépôt : <https://github.com/St3ffyCode/Genealogy_Actes_a_rechercher/tree/main/Actes_a_rechercher>
+GitHub est le site où se trouve l'outil. Il suffit de récupérer **un seul fichier**, `Actes_a_rechercher.html`, et de le garder sur votre ordinateur. Le fichier se trouve dans le dossier `Actes_a_rechercher` du dépôt : <https://github.com/St3ffyCode/Genealogy_Tools/tree/main/Actes_a_rechercher>
 
 **Méthode 1 : télécharger le fichier seul (la plus simple)**
 
@@ -37,7 +37,7 @@ GitHub est le site où se trouve l'outil. Il suffit de récupérer **un seul fic
 
 **Méthode 2 : télécharger tout le dépôt**
 
-1. Ouvrez la page d'accueil du dépôt : <https://github.com/St3ffyCode/Genealogy_Actes_a_rechercher>
+1. Ouvrez la page d'accueil du dépôt : <https://github.com/St3ffyCode/Genealogy_Tools>
 2. Cliquez sur le bouton vert **Code**, puis sur **Download ZIP**.
 3. Le fichier `.zip` arrive dans « Téléchargements ». Faites un clic droit dessus, puis **Extraire tout** (Windows) ou double-cliquez dessus (Mac).
 4. Dans le dossier obtenu, le fichier à utiliser est `Actes_a_rechercher/Actes_a_rechercher.html`. Les autres outils du dépôt sont dans leurs propres dossiers.
