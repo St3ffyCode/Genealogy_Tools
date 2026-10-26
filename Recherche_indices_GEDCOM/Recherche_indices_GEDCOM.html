@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Recherche d'indices GEDCOM</title>
+<style>
+:root{
+  --bg:#f5f3ee;--panel:#ffffff;--ink:#1f2328;--mut:#6a717a;--line:#e1ddd3;--acc:#2f5d8a;--accbg:#e8f0f8;
+  --mark:#ffe27a;--ok:#1d7a46;--okbg:#e3f3ea;--no:#b3261e;--nobg:#fbe9e7;--med:#6b4fa3;--medbg:#eee9f8;--shadow:0 1px 2px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#15171b;--panel:#1e2126;--ink:#e7e7e7;--mut:#9aa0a8;--line:#32363d;--acc:#86b4e3;--accbg:#22323f;
+    --mark:#6e5c10;--ok:#74d79f;--okbg:#17301f;--no:#ff8f86;--nobg:#3a1d1b;--med:#bba5f0;--medbg:#2a2342;--shadow:none}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--mut);margin:0 0 16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
+#dz{border:2px dashed var(--line);text-align:center;cursor:pointer;padding:22px 16px}
+#dz.over{border-color:var(--acc);background:var(--accbg)}
+#dz strong{display:block;font-size:16px}
+#dz .st{color:var(--mut);margin-top:4px}
+.stats{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px}
+.stats span{background:var(--accbg);color:var(--acc);border-radius:999px;padding:2px 10px;font-size:13px}
+label{cursor:pointer}
+.row{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:flex-end;margin-bottom:10px}
+.col{display:flex;flex-direction:column;gap:3px}
+.col>span.t{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+input[type=text],input[type=number],select{font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink)}
+input[type=text]#q{width:100%;font-size:17px;padding:10px 12px}
+input[type=number]{width:96px}
+.grow{flex:1 1 320px}
+.chk{display:inline-flex;gap:6px;align-items:center;margin-right:14px;white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;background:var(--panel)}
+.chip small{color:var(--mut)}
+button{font:inherit;padding:7px 14px;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+button.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
+button:hover{filter:brightness(.97)}
+details.help{font-size:13px;color:var(--mut);margin-top:6px}
+details.help summary{cursor:pointer}
+details.help code{background:var(--accbg);padding:0 4px;border-radius:4px}
+#sum{margin:6px 0 12px;font-size:14px}
+#sum b{font-weight:650}
+.ev{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--c,#888);border-radius:9px;padding:10px 14px;margin-bottom:10px;box-shadow:var(--shadow)}
+.ev-head{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline}
+.badge{--c:#888;display:inline-block;font-weight:650;font-size:12.5px;padding:2px 9px;border-radius:999px;background:color-mix(in srgb,var(--c) 16%,transparent);color:color-mix(in srgb,var(--c) 72%,var(--ink));white-space:nowrap}
+.c-naissance{--c:#2e8b57}.c-bapteme{--c:#1f8a8a}.c-mariage{--c:#b03a78}.c-deces{--c:#555a63}
+.c-inhumation{--c:#8a6a3a}.c-divorce{--c:#d2762a}.c-autre{--c:#4f78a8}.c-fiche{--c:#8a8f98}
+.ev{--c:#888}.ev.c-naissance{--c:#2e8b57}.ev.c-bapteme{--c:#1f8a8a}.ev.c-mariage{--c:#b03a78}.ev.c-deces{--c:#555a63}
+.ev.c-inhumation{--c:#8a6a3a}.ev.c-divorce{--c:#d2762a}.ev.c-autre{--c:#4f78a8}.ev.c-fiche{--c:#8a8f98}
+.date{font-weight:650;white-space:nowrap}
+.place{color:var(--ink)}
+.flags{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.flag{font-size:12.5px;border-radius:6px;padding:2px 8px;white-space:nowrap}
+.flag.ok{background:var(--okbg);color:var(--ok)}
+.flag.no{background:var(--nobg);color:var(--no)}
+.flag.med{background:var(--medbg);color:var(--med)}
+.ppl{margin-top:7px;display:flex;flex-direction:column;gap:3px}
+.pp i{font-style:normal;color:var(--mut);font-size:12.5px}
+.pp code,.mini code{background:var(--accbg);color:var(--acc);border-radius:4px;padding:0 5px;font-size:12px}
+.life{color:var(--mut)}
+.rel{color:var(--mut);font-size:13.5px}
+.rel b{color:var(--ink);font-weight:550}
+.det{margin-top:6px;font-size:14px}
+.det div{margin:1px 0}
+.det .k{color:var(--mut)}
+.why{margin-top:6px;font-size:12.5px;color:var(--mut)}
+.why span{background:var(--accbg);color:var(--acc);border-radius:5px;padding:1px 7px;margin-right:6px;white-space:nowrap}
+ul.src{margin:6px 0 0;padding-left:18px;font-size:14px}
+ul.src li{margin:3px 0}
+.m{display:inline-block;font-size:11.5px;font-weight:650;border-radius:4px;padding:0 6px;margin-right:4px;background:var(--medbg);color:var(--med)}
+.mfile{font-size:13px;color:var(--mut)}
+mark{background:var(--mark);color:inherit;border-radius:3px;padding:0 1px}
+details.fiche{margin-top:8px;border-top:1px dashed var(--line);padding-top:6px}
+details.fiche summary{cursor:pointer;color:var(--acc);font-size:13.5px}
+table.t{border-collapse:collapse;width:100%;font-size:13.5px;margin-top:6px}
+table.t td,table.t th{border-bottom:1px solid var(--line);padding:3px 6px;text-align:left;vertical-align:top}
+table.t tr.cur td{background:var(--accbg)}
+.empty{text-align:center;color:var(--mut);padding:30px}
+.more{text-align:center;margin:12px}
+.mini{font-size:13px;color:var(--mut)}
+@media (max-width:640px){.flags{margin-left:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Recherche d'indices dans un GEDCOM</h1>
+  <p class="sub">Déposez le GEDCOM, saisissez un ou plusieurs mots-clés (nom, rue, lieu…) : l'outil liste les événements concernés, avec leur type, les personnes, les sources et les médias associés. Tout est traité localement dans le navigateur (aucun envoi).</p>
+
+  <div class="card" id="dz" tabindex="0">
+    <strong id="dzt">Déposer un fichier GEDCOM ici</strong>
+    <div class="st" id="dzs">ou cliquer pour le choisir (.ged, .gedcom, .txt)</div>
+    <div class="stats" id="stats"></div>
+    <input type="file" id="file" accept=".ged,.gedcom,.txt,text/plain" hidden>
+  </div>
+
+  <div class="card" id="panel" hidden>
+    <div class="row">
+      <div class="col grow">
+        <span class="t">Mots-clés</span>
+        <input type="text" id="q" placeholder="ex : Dupont, rue de la gare" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="col">
+        <span class="t">Association</span>
+        <select id="mode"><option value="AND">ET (tous les mots-clés)</option><option value="OR">OU (au moins un)</option></select>
+      </div>
+      <div class="col"><span class="t">Année de</span><input type="number" id="yfrom" placeholder="1900"></div>
+      <div class="col"><span class="t">à</span><input type="number" id="yto" placeholder="1910"></div>
+    </div>
+    <div class="row">
+      <label class="chk"><input type="checkbox" id="phon" checked> Variantes phonétiques (W/V, oe/ö, ff/f, ai/ei, y/i…)</label>
+      <label class="chk"><input type="checkbox" id="splitsp"> Un espace sépare deux mots-clés</label>
+      <label class="chk"><input type="checkbox" id="nodate" checked> Inclure les événements sans date</label>
+    </div>
+    <div class="row">
+      <div class="col"><span class="t">Où chercher</span>
+        <div>
+          <label class="chk"><input type="checkbox" data-sc="place" checked> Lieu / adresse</label>
+          <label class="chk"><input type="checkbox" data-sc="name" checked> Nom de la personne</label>
+          <label class="chk"><input type="checkbox" data-sc="prox" checked> Noms des proches (parents, conjoints, enfants)</label>
+          <label class="chk"><input type="checkbox" data-sc="date" checked> Date</label>
+          <label class="chk"><input type="checkbox" data-sc="txt" checked> Libellé / cause / notes</label>
+          <label class="chk"><input type="checkbox" data-sc="src" checked> Sources &amp; fichiers médias</label>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col grow"><span class="t">Types d'événements</span><div class="chips" id="cats"></div></div>
+    </div>
+    <div class="row">
+      <div class="col"><span class="t">Source</span>
+        <select id="srcf"><option value="all">Toutes</option><option value="with">Avec source</option><option value="without">Sans source</option></select></div>
+      <div class="col"><span class="t">Média</span>
+        <select id="medf"><option value="all">Tous</option><option value="with">Avec média</option><option value="without">Sans média</option></select></div>
+      <div class="col"><span class="t">Tri</span>
+        <select id="sort"><option value="rel">Pertinence</option><option value="dateA">Date ↑</option><option value="dateD">Date ↓</option><option value="type">Type</option><option value="place">Lieu</option><option value="name">Nom</option></select></div>
+      <div class="col"><span class="t">&nbsp;</span>
+        <div><button class="pri" id="go">Rechercher</button> <button id="reset">Réinitialiser</button> <button id="csv">Export CSV</button></div></div>
+    </div>
+    <details class="help"><summary>Aide sur la saisie</summary>
+      Séparez les mots-clés par une virgule : <code>Dupont, rue de la gare</code>. Chaque mot-clé est une expression cherchée telle quelle (accents et majuscules ignorés).
+      Préfixer par <code>-</code> exclut les événements contenant ce mot. « Variantes phonétiques » rapproche par exemple Meyer / Meier / Mayer ; il peut aussi ajouter des faux positifs.
+      La zone « Où chercher » permet de limiter la recherche (ex. seulement le lieu). La ligne « Correspondances » de chaque résultat indique où chaque mot-clé a été trouvé.
+    </details>
+  </div>
+
+  <div id="sum"></div>
+  <div id="res"></div>
+  <div class="more" id="more" hidden><button id="moreb">Afficher la suite</button></div>
+</div>
+
+<script>
+// ===================================================================
+// MOTEUR (pur, sans DOM)
+// ===================================================================
+const EV_MAP = {
+  BIRT:['Naissance','naissance'], CHR:['Baptême','bapteme'], BAPM:['Baptême','bapteme'], CHRA:['Baptême (adulte)','bapteme'],
+  DEAT:['Décès','deces'], BURI:['Inhumation','inhumation'], CREM:['Crémation','inhumation'],
+  MARR:['Mariage','mariage'], MARB:['Bans de mariage','mariage'], MARC:['Contrat de mariage','mariage'],
+  MARL:['Licence de mariage','mariage'], MARS:['Contrat de mariage','mariage'], ENGA:['Fiançailles','mariage'],
+  DIV:['Divorce','divorce'], DIVF:['Demande de divorce','divorce'], ANUL:['Annulation','divorce'],
+  OCCU:['Profession','autre'], RESI:['Résidence','autre'], CENS:['Recensement','autre'],
+  EVEN:['Événement','autre'], FACT:['Fait','autre'], IMMI:['Immigration','autre'], EMIG:['Émigration','autre'],
+  NATU:['Naturalisation','autre'], PROB:['Homologation de testament','autre'], WILL:['Testament','autre'],
+  GRAD:['Diplôme','autre'], RETI:['Retraite','autre'], ADOP:['Adoption','autre'], CONF:['Confirmation','autre'],
+  FCOM:['Première communion','autre'], BARM:['Bar-mitsvah','autre'], BASM:['Bat-mitsvah','autre'],
+  BLES:['Bénédiction','autre'], ORDN:['Ordination','autre'], EDUC:['Instruction','autre'], NATI:['Nationalité','autre'],
+  PROP:['Propriété','autre'], RELI:['Religion','autre'], TITL:['Titre','autre'], DSCR:['Description','autre'],
+  NCHI:['Nombre d’enfants','autre'], NMR:['Nombre de mariages','autre'], CAST:['Caste','autre'],
+  BAPL:['Baptême (LDS)','autre'], CONL:['Confirmation (LDS)','autre'], ENDL:['Dotation (LDS)','autre'],
+  SLGC:['Scellement enfant (LDS)','autre'], SLGS:['Scellement conjoints (LDS)','autre'], _MILT:['Service militaire','autre']
+};
+const EV_IGN = new Set(['NAME','SEX','FAMC','FAMS','NOTE','SOUR','OBJE','CHAN','REFN','RIN','RFN','AFN','ALIA','ASSO','SUBM','ANCI','DESI','HUSB','WIFE','CHIL','_UID','UID','_UPD','_DATE']);
+const CAT_LABEL = {naissance:'Naissance',bapteme:'Baptême',mariage:'Mariage / bans / contrat',deces:'Décès',inhumation:'Inhumation / crémation',divorce:'Divorce',autre:'Autres événements',fiche:'Notes / sources de la fiche'};
+const CAT_ORDER = ['naissance','bapteme','mariage','deces','inhumation','divorce','autre','fiche'];
+const FIELD_LABEL = {place:'lieu',name:'nom',prox:'proche',date:'date',txt:'libellé/notes',src:'source/média'};
+const FIELD_WEIGHT = {place:3,name:3,txt:2,src:1,prox:1,date:1};
+
+function isPtr(v){ return /^@[^@]+@$/.test((v||'').trim()); }
+function kid(n,t){ return n.kids.find(k=>k.tag===t); }
+function kidsOf(n,t){ return n.kids.filter(k=>k.tag===t); }
+function sub(n,t){ const k=kid(n,t); return k ? (k.val||'') : ''; }
+
+function decodeBuffer(buf){
+  const u8 = new Uint8Array(buf);
+  if(u8[0]===0xFF && u8[1]===0xFE) return new TextDecoder('utf-16le').decode(u8.subarray(2));
+  if(u8[0]===0xFE && u8[1]===0xFF) return new TextDecoder('utf-16be').decode(u8.subarray(2));
+  if(u8.length>3 && u8[1]===0 && u8[0]!==0 && u8[3]===0) return new TextDecoder('utf-16le').decode(u8);
+  try { return new TextDecoder('utf-8',{fatal:true}).decode(u8); } catch(e){}
+  return new TextDecoder('windows-1252').decode(u8);
+}
+
+function parseGedcom(text){
+  const lines = text.split(/\r\n|\n|\r/);
+  const root = {lvl:-1,tag:'ROOT',val:'',kids:[]};
+  const stack = [root];
+  const re = /^\s*(\d+)\s+(@[^@]+@\s+)?(\S+)(?: (.*))?$/;
+  for(let i=0;i<lines.length;i++){
+    let ln = lines[i]; if(!ln) continue;
+    if(i===0) ln = ln.replace(/^﻿/,'');
+    const m = re.exec(ln); if(!m) continue;
+    const lvl = +m[1]; const tag = m[3].toUpperCase(); const val = m[4]===undefined ? '' : m[4];
+    while(stack.length>1 && stack[stack.length-1].lvl>=lvl) stack.pop();
+    const parent = stack[stack.length-1];
+    if(tag==='CONC' || tag==='CONT'){
+      parent.val = (parent.val||'') + (tag==='CONT' ? '\n' : '') + val;
+      continue;
+    }
+    const node = {lvl, id: m[2] ? m[2].trim() : null, tag, val, kids:[]};
+    parent.kids.push(node);
+    stack.push(node);
+  }
+  return root;
+}
+
+// ---------- normalisation ----------
+const _exc = {};
+function exChar(c){
+  let r = _exc[c];
+  if(r===undefined){
+    r = (c==='œ'||c==='Œ') ? 'o' : (c==='æ'||c==='Æ') ? 'a' : (c==='ß') ? 's' : c.normalize('NFD').charAt(0).toLowerCase();
+    if(r.length!==1) r = c.toLowerCase().charAt(0) || c;
+    _exc[c] = r;
+  }
+  return r;
+}
+function exNorm(s){ let o=''; for(let i=0;i<s.length;i++) o+=exChar(s[i]); return o; }   // longueur conservée
+function phNorm(s){
+  s = s.toLowerCase().replace(/œ/g,'oe').replace(/æ/g,'ae').replace(/ß/g,'ss');
+  s = s.normalize('NFD').replace(/[̀-ͯ]/g,'');
+  s = s.replace(/oe|ae|ue/g, m=>m[0]);
+  s = s.replace(/ph/g,'f').replace(/w/g,'v').replace(/y/g,'i').replace(/ck/g,'k').replace(/th/g,'t').replace(/dt/g,'t').replace(/ai/g,'ei');
+  s = s.replace(/([a-z])\1+/g,'$1');
+  return s;
+}
+function matchNorm(s,phon){
+  return (phon ? phNorm(s) : exNorm(s)).replace(/[-'’.,;]+/g,' ').replace(/\s+/g,' ').trim();
+}
+
+// ---------- dates ----------
+function parseDateRange(d){
+  if(!d) return null;
+  const s = d.toUpperCase().replace(/@#D[^@]*@/g,'');
+  const ys = [...s.matchAll(/(?<!\d)(\d{3,4})(?!\d)/g)].map(m=>+m[1]);
+  if(!ys.length) return null;
+  if(/\b(BEF|BEFORE|AVANT)\b/.test(s)) return [-9999, ys[0]];
+  if(/\b(AFT|AFTER|APRES|APRÈS)\b/.test(s)) return [ys[0], 9999];
+  if(ys.length>=2) return [Math.min(ys[0],ys[1]), Math.max(ys[0],ys[1])];
+  if(/^\s*(FROM|DE|DU)\b/.test(s)) return [ys[0], 9999];
+  if(/^\s*(TO|AU)\b/.test(s)) return [-9999, ys[0]];
+  return [ys[0], ys[0]];
+}
+function firstYear(d){ const m=/(?<!\d)(\d{3,4})(?!\d)/.exec(d||''); return m ? m[1] : ''; }
+function baseName(f){ return String(f||'').split(/[\\/]/).pop(); }
+function extOf(f){ const b=baseName(f); const i=b.lastIndexOf('.'); return i>=0 ? b.slice(i+1).toLowerCase().slice(0,6) : ''; }
+
+// ---------- construction de la base ----------
+function buildDB(root){
+  const notes={}, medRecs={}, srcs={}, P={}, F={}, events=[];
+  let uid=0;
+  const counts={indi:0,fam:0,sour:0,obje:0};
+
+  for(const r of root.kids){ if(r.tag==='NOTE' && r.id) notes[r.id]=r.val||''; }
+  const noteText = n => { const v=(n.val||'').trim(); return isPtr(v) ? (notes[v]||'') : (n.val||''); };
+
+  function mediaFromNode(o){
+    const out=[]; const files=kidsOf(o,'FILE').concat(kidsOf(o,'_FILE'));
+    const oForm=sub(o,'FORM'), oTitl=sub(o,'TITL');
+    for(const f of files) out.push({file:f.val||'', form:sub(f,'FORM')||oForm, title:sub(f,'TITL')||oTitl});
+    return out;
+  }
+  function mediaRef(o,origin){
+    const v=(o.val||'').trim(); let arr;
+    if(isPtr(v)) arr = medRecs[v] || [{file:'(média '+v+' introuvable)',form:'',title:''}];
+    else arr = mediaFromNode(o);
+    return arr.map(m=>({file:m.file,form:m.form,title:m.title,origin}));
+  }
+  for(const r of root.kids){ if(r.tag==='OBJE' && r.id){ medRecs[r.id]=mediaFromNode(r); counts.obje++; } }
+
+  for(const r of root.kids){
+    if(r.tag!=='SOUR' || !r.id) continue;
+    counts.sour++;
+    const s={id:r.id,title:sub(r,'TITL'),abbr:sub(r,'ABBR'),auth:sub(r,'AUTH'),publ:sub(r,'PUBL'),text:sub(r,'TEXT'),media:[]};
+    for(const o of kidsOf(r,'OBJE')) s.media.push(...mediaRef(o,'source'));
+    s.title = s.title || s.abbr || (s.text ? s.text.slice(0,80) : '') || r.id;
+    srcs[r.id]=s;
+  }
+
+  function parseCite(n){
+    const c={srcId:null,title:'',page:'',quay:'',text:'',auth:'',publ:'',notes:[],media:[]};
+    const v=(n.val||'').trim();
+    if(isPtr(v)){
+      c.srcId=v; const s=srcs[v];
+      if(s){ c.title=s.title; c.auth=s.auth; c.publ=s.publ; c.srcText=s.text; for(const m of s.media) c.media.push(m); }
+      else c.title='(source '+v+' introuvable)';
+    } else c.title = v || '(source sans titre)';
+    c.page=sub(n,'PAGE'); c.quay=sub(n,'QUAY');
+    const data=kid(n,'DATA');
+    c.text=[sub(n,'TEXT'), data?sub(data,'TEXT'):''].filter(Boolean).join(' ');
+    for(const k of n.kids){
+      if(k.tag==='NOTE'){ const t=noteText(k); if(t) c.notes.push(t); }
+      else if(k.tag==='OBJE') c.media.push(...mediaRef(k,'citation'));
+    }
+    return c;
+  }
+
+  function isEventNode(k){ return !!EV_MAP[k.tag] || (!EV_IGN.has(k.tag) && !!(kid(k,'DATE')||kid(k,'PLAC'))); }
+
+  function finishEvent(ev){
+    ev.medAll=[...ev.media]; for(const c of ev.cites) for(const m of c.media) ev.medAll.push(m);
+    ev.hasSrc = ev.cites.length>0; ev.hasMed = ev.medAll.length>0;
+    ev.range = parseDateRange(ev.date);
+    events.push(ev);
+    return ev;
+  }
+  function makeEvent(n,kind,ownerId){
+    const info=EV_MAP[n.tag];
+    const ev={uid:++uid,kind,ownerId,tag:n.tag,cat:info?info[1]:'autre',label:info?info[0]:n.tag,type:'',value:'',date:'',place:'',addr:'',cause:'',agency:'',age:'',lat:'',lon:'',notes:[],cites:[],media:[]};
+    const v=(n.val||'').trim(); if(v && v!=='Y' && !isPtr(v)) ev.value=v;
+    for(const k of n.kids){
+      switch(k.tag){
+        case 'DATE': ev.date=(k.val||'').trim(); break;
+        case 'PLAC': { ev.place=(k.val||'').trim(); const mp=kid(k,'MAP'); if(mp){ ev.lat=sub(mp,'LATI'); ev.lon=sub(mp,'LONG'); } break; }
+        case 'ADDR': ev.addr=[k.val,sub(k,'ADR1'),sub(k,'ADR2'),sub(k,'CITY'),sub(k,'POST'),sub(k,'CTRY')].filter(Boolean).join(', '); break;
+        case 'TYPE': ev.type=k.val||''; break;
+        case 'CAUS': ev.cause=k.val||''; break;
+        case 'AGNC': ev.agency=k.val||''; break;
+        case 'AGE': ev.age=k.val||''; break;
+        case 'NOTE': { const t=noteText(k); if(t) ev.notes.push(t); break; }
+        case 'SOUR': ev.cites.push(parseCite(k)); break;
+        case 'OBJE': ev.media.push(...mediaRef(k,'événement')); break;
+      }
+    }
+    if((n.tag==='EVEN'||n.tag==='FACT') && ev.type) ev.label = info[0]+' : '+ev.type;
+    return finishEvent(ev);
+  }
+  function makeFiche(kind,ownerId,o){
+    const ev={uid:++uid,kind,ownerId,tag:'FICHE',cat:'fiche',label:kind==='INDI'?'Notes / sources de la fiche':'Notes / sources de la famille',type:'',value:'',date:'',place:'',addr:'',cause:'',agency:'',age:'',lat:'',lon:'',notes:o.notes,cites:o.cites,media:o.media};
+    return finishEvent(ev);
+  }
+  function parseName(n){
+    const raw=n.val||''; let g=sub(n,'GIVN'), s=sub(n,'SURN');
+    const m=/^(.*?)\/(.*?)\/(.*)$/.exec(raw);
+    if(m){ if(!g) g=(m[1]+' '+m[3]).trim(); if(!s) s=m[2].trim(); } else if(!g && !s) g=raw.trim();
+    const extra=[sub(n,'NICK'),sub(n,'_MARNM'),sub(n,'_AKA')].filter(Boolean);
+    return {given:g.trim(),surn:s.trim(),extra,type:sub(n,'TYPE')};
+  }
+
+  for(const r of root.kids){
+    if(r.tag==='INDI' && r.id){
+      counts.indi++;
+      const p={id:r.id,names:[],sex:sub(r,'SEX'),famc:[],fams:[],events:[],notes:[],cites:[],media:[]};
+      for(const k of r.kids){
+        switch(k.tag){
+          case 'NAME': p.names.push(parseName(k)); break;
+          case 'FAMC': p.famc.push((k.val||'').trim()); break;
+          case 'FAMS': p.fams.push((k.val||'').trim()); break;
+          case 'NOTE': { const t=noteText(k); if(t) p.notes.push(t); break; }
+          case 'SOUR': p.cites.push(parseCite(k)); break;
+          case 'OBJE': p.media.push(...mediaRef(k,'fiche')); break;
+          default: if(isEventNode(k)) p.events.push(makeEvent(k,'INDI',r.id));
+        }
+      }
+      const n0=p.names[0];
+      p.disp = n0 ? ((n0.surn?n0.surn.toUpperCase():'') + (n0.given?' '+n0.given:'')).trim() : '';
+      p.disp = p.disp || '(sans nom)';
+      if(p.notes.length||p.cites.length||p.media.length) p.events.push(makeFiche('INDI',r.id,p));
+      P[r.id]=p;
+    } else if(r.tag==='FAM' && r.id){
+      counts.fam++;
+      const f={id:r.id,husb:'',wife:'',chil:[],events:[],notes:[],cites:[],media:[]};
+      for(const k of r.kids){
+        switch(k.tag){
+          case 'HUSB': f.husb=(k.val||'').trim(); break;
+          case 'WIFE': f.wife=(k.val||'').trim(); break;
+          case 'CHIL': f.chil.push((k.val||'').trim()); break;
+          case 'NOTE': { const t=noteText(k); if(t) f.notes.push(t); break; }
+          case 'SOUR': f.cites.push(parseCite(k)); break;
+          case 'OBJE': f.media.push(...mediaRef(k,'fiche')); break;
+          default: if(isEventNode(k)) f.events.push(makeEvent(k,'FAM',r.id));
+        }
+      }
+      if(f.notes.length||f.cites.length||f.media.length) f.events.push(makeFiche('FAM',r.id,f));
+      F[r.id]=f;
+    }
+  }
+
+  // années de vie
+  for(const id in P){
+    const p=P[id];
+    const find=(...tags)=>{ for(const t of tags){ const e=p.events.find(e=>e.tag===t && e.date); if(e) return firstYear(e.date); } return ''; };
+    const b=find('BIRT','CHR','BAPM'), d=find('DEAT','BURI','CREM');
+    p.life = (b||d) ? '('+(b||'')+'–'+(d||'')+')' : '';
+  }
+
+  // noms / proches
+  function nameTxt(pid){
+    const p=P[pid]; if(!p) return '';
+    if(p._nt===undefined) p._nt=p.names.map(n=>[(n.given+' '+n.surn).trim(),(n.surn+' '+n.given).trim(),...n.extra].join(' | ')).join(' | ');
+    return p._nt;
+  }
+  function relIds(pid){
+    const p=P[pid]; const s=new Set(); if(!p) return s;
+    for(const fid of p.famc){ const f=F[fid]; if(f){ if(f.husb) s.add(f.husb); if(f.wife) s.add(f.wife); } }
+    for(const fid of p.fams){ const f=F[fid]; if(f){ if(f.husb) s.add(f.husb); if(f.wife) s.add(f.wife); for(const c of f.chil) s.add(c); } }
+    s.delete(pid); return s;
+  }
+  function famRelIds(f){
+    const s=new Set(f.chil);
+    for(const pid of [f.husb,f.wife]){ const p=P[pid]; if(!p) continue; for(const fid of p.famc){ const g=F[fid]; if(g){ if(g.husb) s.add(g.husb); if(g.wife) s.add(g.wife); } } }
+    if(f.husb) s.delete(f.husb); if(f.wife) s.delete(f.wife);
+    return s;
+  }
+  const fam_cache={};
+  for(const ev of events){
+    let people, proxIds;
+    if(ev.kind==='INDI'){ people=[{id:ev.ownerId,role:''}]; proxIds=relIds(ev.ownerId); }
+    else {
+      const f=F[ev.ownerId]; people=[];
+      if(f.husb && P[f.husb]) people.push({id:f.husb,role:'Époux'});
+      if(f.wife && P[f.wife]) people.push({id:f.wife,role:'Épouse'});
+      proxIds=famRelIds(f);
+    }
+    ev.people=people;
+    const srcTxt=[];
+    for(const c of ev.cites) srcTxt.push(c.title,c.page,c.text,c.auth,c.publ,c.srcText||'',...c.notes);
+    for(const m of ev.medAll) srcTxt.push(baseName(m.file),m.title||'');
+    ev.H={
+      place:(ev.place+' | '+ev.addr),
+      name:people.map(x=>nameTxt(x.id)).join(' | '),
+      prox:[...proxIds].map(nameTxt).join(' | '),
+      date:ev.date,
+      txt:[ev.label,ev.type,ev.value,ev.cause,ev.agency,ev.age,...ev.notes].join(' | '),
+      src:srcTxt.filter(Boolean).join(' | ')
+    };
+  }
+  return {P,F,srcs,events,counts};
+}
+
+// ---------- recherche ----------
+function parseQuery(q,phon,splitSpaces){
+  let parts=(q||'').split(/[,;\n]+/);
+  if(splitSpaces) parts=parts.flatMap(p=>p.split(/\s+/));
+  const pos=[],neg=[];
+  for(let p of parts){
+    p=p.trim(); if(!p) continue;
+    let isNeg=false;
+    if(p[0]==='-' && p.length>1){ isNeg=true; p=p.slice(1).trim(); }
+    p=p.replace(/^["«]+|["»]+$/g,'').trim(); if(!p) continue;
+    const key=matchNorm(p,phon); if(!key) continue;
+    (isNeg?neg:pos).push({raw:p,key});
+  }
+  return {pos,neg};
+}
+function fieldNorm(ev,f,phon){
+  const k=phon?'_np':'_nx'; const c=ev[k]||(ev[k]={});
+  if(c[f]===undefined) c[f]=matchNorm(ev.H[f]||'',phon);
+  return c[f];
+}
+function search(DB,o){
+  const phon=!!o.phon;
+  const {pos,neg}=parseQuery(o.q,phon,o.splitSpaces);
+  const scope=['place','name','prox','date','txt','src'].filter(f=>!o.scope || o.scope[f]!==false);
+  const yf=(o.yFrom===''||o.yFrom==null||isNaN(+o.yFrom))?null:+o.yFrom;
+  const yt=(o.yTo===''||o.yTo==null||isNaN(+o.yTo))?null:+o.yTo;
+  const out=[];
+  for(const ev of DB.events){
+    if(o.cats && !o.cats.has(ev.cat)) continue;
+    if(yf!==null || yt!==null){
+      if(!ev.range){ if(o.incNoDate===false) continue; }
+      else {
+        if(yf!==null && ev.range[1]<yf) continue;
+        if(yt!==null && ev.range[0]>yt) continue;
+      }
+    } else if(!ev.range && o.incNoDate===false) continue;
+    if(o.src==='with' && !ev.hasSrc) continue;
+    if(o.src==='without' && ev.hasSrc) continue;
+    if(o.med==='with' && !ev.hasMed) continue;
+    if(o.med==='without' && ev.hasMed) continue;
+    let score=0; const why=[];
+    if(pos.length){
+      let nm=0, fail=false;
+      for(const t of pos){
+        const fs=[]; for(const f of scope) if(fieldNorm(ev,f,phon).includes(t.key)) fs.push(f);
+        if(fs.length){ nm++; score+=Math.max(...fs.map(f=>FIELD_WEIGHT[f])); why.push({term:t.raw,fields:fs}); }
+        else if(o.mode!=='OR'){ fail=true; break; }
+      }
+      if(fail || nm===0) continue;
+    }
+    let bad=false;
+    for(const t of neg){ for(const f of scope) if(fieldNorm(ev,f,phon).includes(t.key)){ bad=true; break; } if(bad) break; }
+    if(bad) continue;
+    out.push({ev,score,why});
+  }
+  const dk=r=>r.ev.range?r.ev.range[0]:99999;
+  const nk=r=>r.ev.people.length?(DB.P[r.ev.people[0].id].disp||''):'';
+  const cmp={
+    rel:(a,b)=>b.score-a.score||dk(a)-dk(b),
+    dateA:(a,b)=>dk(a)-dk(b),
+    dateD:(a,b)=>(b.ev.range?b.ev.range[0]:-1)-(a.ev.range?a.ev.range[0]:-1),
+    type:(a,b)=>CAT_ORDER.indexOf(a.ev.cat)-CAT_ORDER.indexOf(b.ev.cat)||dk(a)-dk(b),
+    place:(a,b)=>a.ev.place.localeCompare(b.ev.place,'fr')||dk(a)-dk(b),
+    name:(a,b)=>nk(a).localeCompare(nk(b),'fr')||dk(a)-dk(b)
+  }[o.sort||'rel'];
+  out.sort(cmp);
+  const hl={phon,keys:pos.map(t=>exNorm(t.raw.trim())).filter(Boolean),pwords:[]};
+  for(const t of pos){
+    const words=phNorm(t.raw).split(/[^a-z0-9]+/).filter(Boolean);
+    if(words.length===1){ if(words[0].length>=3) hl.pwords.push(words[0]); }
+    else for(const w of words) if(w.length>=4) hl.pwords.push(w);
+  }
+  return {results:out,hl,pos,neg};
+}
+
+// ===================================================================
+// /*==UI==*/
+// ===================================================================
+if(typeof document!=='undefined'){
+const $=id=>document.getElementById(id);
+let DB=null, RES=null, shown=0;
+const PAGE=60;
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function hl(text){
+  text=String(text==null?'':text); if(!text) return '';
+  const H=RES&&RES.hl; if(!H||!H.keys.length) return esc(text);
+  const ranges=[]; const nt=exNorm(text);
+  for(const k of H.keys){ let i=0; while((i=nt.indexOf(k,i))>=0){ ranges.push([i,i+k.length]); i+=k.length; } }
+  if(H.phon && H.pwords.length){
+    const re=/[\p{L}\p{N}]+/gu; let m;
+    while((m=re.exec(text))){ const pk=phNorm(m[0]); for(const w of H.pwords){ if(pk.includes(w)){ ranges.push([m.index,m.index+m[0].length]); break; } } }
+  }
+  if(!ranges.length) return esc(text);
+  ranges.sort((a,b)=>a[0]-b[0]||b[1]-a[1]);
+  const merged=[]; for(const r of ranges){ const l=merged[merged.length-1]; if(l && r[0]<=l[1]) l[1]=Math.max(l[1],r[1]); else merged.push([r[0],r[1]]); }
+  let out='',pos=0; for(const [a,b] of merged){ out+=esc(text.slice(pos,a))+'<mark>'+esc(text.slice(a,b))+'</mark>'; pos=b; }
+  return out+esc(text.slice(pos));
+}
+const fmtPlace=p=>String(p||'').split(',').map(s=>s.trim()).filter(Boolean).join(', ');
+const shortId=id=>String(id||'').replace(/@/g,'');
+
+function personLine(pid,role){
+  const p=DB.P[pid]; if(!p) return '';
+  const alias=p.names.slice(1).map(n=>((n.surn?n.surn.toUpperCase():'')+' '+n.given).trim()).filter(Boolean);
+  return '<div class="pp">'+(role?'<i>'+esc(role)+'</i> ':'')+'<b>'+hl(p.disp)+'</b> <span class="life">'+esc(p.life)+'</span> <code>'+esc(shortId(pid))+'</code>'
+    +(p.sex?' <span class="life">'+esc(p.sex)+'</span>':'')
+    +(alias.length?' <span class="life">— autres noms : '+hl(alias.join(' ; '))+'</span>':'')+'</div>';
+}
+function nameShort(pid){ const p=DB.P[pid]; return p ? '<b>'+hl(p.disp)+'</b>'+(p.life?' <span class="life">'+esc(p.life)+'</span>':'') : ''; }
+function joinNames(ids){ return ids.map(nameShort).filter(Boolean).join(', '); }
+function relHtml(ev){
+  const L=[];
+  if(ev.kind==='INDI'){
+    const p=DB.P[ev.ownerId]; if(!p) return '';
+    const par=[]; for(const fid of p.famc){ const f=DB.F[fid]; if(f){ if(f.husb) par.push(f.husb); if(f.wife) par.push(f.wife); } }
+    const sp=[],ch=[]; for(const fid of p.fams){ const f=DB.F[fid]; if(!f) continue; const o=f.husb===p.id?f.wife:f.husb; if(o) sp.push(o); ch.push(...f.chil); }
+    if(par.length) L.push('Parents : '+joinNames(par));
+    if(sp.length) L.push('Conjoint(s) : '+joinNames(sp));
+    if(ch.length) L.push('Enfants : '+joinNames(ch.slice(0,12))+(ch.length>12?' … (+'+(ch.length-12)+')':''));
+  } else {
+    const f=DB.F[ev.ownerId]; if(!f) return '';
+    for(const [pid,lab] of [[f.husb,'Parents de l’époux'],[f.wife,'Parents de l’épouse']]){
+      const p=DB.P[pid]; if(!p) continue; const par=[];
+      for(const fid of p.famc){ const g=DB.F[fid]; if(g){ if(g.husb) par.push(g.husb); if(g.wife) par.push(g.wife); } }
+      if(par.length) L.push(lab+' : '+joinNames(par));
+    }
+    if(f.chil.length) L.push('Enfants : '+joinNames(f.chil.slice(0,12))+(f.chil.length>12?' … (+'+(f.chil.length-12)+')':''));
+  }
+  return L.length ? '<div class="rel">'+L.map(x=>'<div>'+x+'</div>').join('')+'</div>' : '';
+}
+function mediaChip(m){
+  const ext=extOf(m.file);
+  return '<span class="m">'+esc((ext||'?').toUpperCase())+'</span><span class="mfile" title="'+esc(m.file)+'">'+hl(baseName(m.file))+(m.title?' — '+hl(m.title):'')+(m.origin?' <i>('+esc(m.origin)+')</i>':'')+'</span>';
+}
+function citeHtml(c){
+  let s='<li><b>'+hl(c.title)+'</b>';
+  if(c.page) s+=' — '+hl(c.page);
+  if(c.quay!=='') s+=' · <span class="mini">fiabilité '+esc(c.quay)+'/3</span>';
+  if(c.srcId) s+=' <code class="mini">'+esc(shortId(c.srcId))+'</code>';
+  if(c.auth||c.publ) s+='<div class="mini">'+hl([c.auth,c.publ].filter(Boolean).join(' · '))+'</div>';
+  const txt=[c.text,c.srcText].filter(Boolean).join(' ');
+  if(txt) s+='<div class="mini">'+hl(txt.length>400?txt.slice(0,400)+'…':txt)+'</div>';
+  for(const n of c.notes) s+='<div class="mini">'+hl(n.length>400?n.slice(0,400)+'…':n)+'</div>';
+  if(c.media.length) s+='<div>'+c.media.map(m=>mediaChip({...m,origin:m.origin})).join('<br>')+'</div>';
+  return s+'</li>';
+}
+function cardHtml(r){
+  const ev=r.ev;
+  const flags=[];
+  if(ev.cat!=='fiche'){
+    flags.push(ev.hasSrc ? '<span class="flag ok">✔ Source'+(ev.cites.length>1?' ×'+ev.cites.length:'')+'</span>' : '<span class="flag no">✖ Sans source</span>');
+  }
+  if(ev.hasMed) flags.push('<span class="flag med">📎 '+ev.medAll.length+' média'+(ev.medAll.length>1?'s':'')+' ('+[...new Set(ev.medAll.map(m=>(extOf(m.file)||'?').toUpperCase()))].join(', ')+')</span>');
+  let h='<article class="ev c-'+ev.cat+'" data-uid="'+ev.uid+'"><div class="ev-head"><span class="badge c-'+ev.cat+'">'+esc(ev.label)+'</span>';
+  h+='<span class="date">'+(ev.date?hl(ev.date):'<span class="life">sans date</span>')+'</span>';
+  const pl=fmtPlace(ev.place); if(pl) h+='<span class="place">'+hl(pl)+'</span>';
+  h+='<span class="flags">'+flags.join('')+'</span></div>';
+  h+='<div class="ppl">'+ev.people.map(x=>personLine(x.id,x.role)).join('')+relHtml(ev)+'</div>';
+  const det=[];
+  if(ev.type && ev.tag!=='EVEN' && ev.tag!=='FACT') det.push(['Type',ev.type]);
+  if(ev.value) det.push(['Valeur',ev.value]);
+  if(ev.cause) det.push(['Cause / précision',ev.cause]);
+  if(ev.agency) det.push(['Organisme',ev.agency]);
+  if(ev.age) det.push(['Âge',ev.age]);
+  if(ev.addr) det.push(['Adresse',ev.addr]);
+  if(ev.lat||ev.lon) det.push(['Coordonnées',(ev.lat+' '+ev.lon).trim()]);
+  for(const n of ev.notes) det.push(['Note',n.length>500?n.slice(0,500)+'…':n]);
+  if(det.length) h+='<div class="det">'+det.map(d=>'<div><span class="k">'+esc(d[0])+' :</span> '+hl(d[1])+'</div>').join('')+'</div>';
+  if(ev.cites.length) h+='<ul class="src">'+ev.cites.map(citeHtml).join('')+'</ul>';
+  if(ev.media.length) h+='<div class="det">'+ev.media.map(m=>'<div>'+mediaChip(m)+'</div>').join('')+'</div>';
+  if(r.why.length) h+='<div class="why">Correspondances : '+r.why.map(w=>'<span>« '+esc(w.term)+' » → '+w.fields.map(f=>FIELD_LABEL[f]).join(', ')+'</span>').join('')+'</div>';
+  const pids=ev.people.map(x=>x.id);
+  if(pids.length) h+=pids.map(pid=>'<details class="fiche" data-pid="'+esc(pid)+'" data-uid="'+ev.uid+'"><summary>Fiche complète — '+esc(DB.P[pid].disp)+'</summary><div class="fbody"></div></details>').join('');
+  return h+'</article>';
+}
+function ficheHtml(pid,curUid){
+  const p=DB.P[pid]; let h='';
+  const par=[]; for(const fid of p.famc){ const f=DB.F[fid]; if(f){ if(f.husb) par.push(f.husb); if(f.wife) par.push(f.wife); } }
+  if(par.length) h+='<div class="rel">Parents : '+joinNames(par)+'</div>';
+  for(const fid of p.fams){ const f=DB.F[fid]; if(!f) continue; const o=f.husb===p.id?f.wife:f.husb;
+    const mar=f.events.find(e=>e.tag==='MARR');
+    h+='<div class="rel">Union <code>'+esc(shortId(fid))+'</code>'+(o?' avec '+nameShort(o):'')+(mar&&mar.date?' — mariage '+esc(mar.date):'')+(f.chil.length?' — enfants : '+joinNames(f.chil.slice(0,12)):'')+'</div>'; }
+  const evs=[...p.events]; for(const fid of p.fams){ const f=DB.F[fid]; if(f) for(const e of f.events) evs.push(e); }
+  evs.sort((a,b)=>(a.range?a.range[0]:99999)-(b.range?b.range[0]:99999));
+  h+='<table class="t"><tr><th>Type</th><th>Date</th><th>Lieu</th><th>Source</th><th>Médias</th></tr>'+
+    evs.map(e=>'<tr'+(e.uid==curUid?' class="cur"':'')+'><td>'+esc(e.label)+'</td><td>'+esc(e.date)+'</td><td>'+esc(fmtPlace(e.place))+'</td><td>'+(e.cat==='fiche'?'':(e.hasSrc?'✔ '+e.cites.length:'✖'))+'</td><td>'+(e.hasMed?e.medAll.map(m=>(extOf(m.file)||'?').toUpperCase()).join(' '):'')+'</td></tr>').join('')+'</table>';
+  return h;
+}
+
+function opts(){
+  const scope={}; document.querySelectorAll('[data-sc]').forEach(c=>scope[c.dataset.sc]=c.checked);
+  const cats=new Set(); document.querySelectorAll('#cats input').forEach(c=>{ if(c.checked) cats.add(c.value); });
+  return {q:$('q').value,mode:$('mode').value,phon:$('phon').checked,splitSpaces:$('splitsp').checked,scope,cats,
+    yFrom:$('yfrom').value,yTo:$('yto').value,incNoDate:$('nodate').checked,src:$('srcf').value,med:$('medf').value,sort:$('sort').value};
+}
+function run(){
+  if(!DB) return;
+  RES=search(DB,opts());
+  const list=RES.results;
+  const byCat={}; const pers=new Set();
+  for(const r of list){ byCat[r.ev.cat]=(byCat[r.ev.cat]||0)+1; for(const x of r.ev.people) pers.add(x.id); }
+  $('sum').innerHTML = '<b>'+list.length+'</b> événement'+(list.length>1?'s':'')+' — <b>'+pers.size+'</b> personne'+(pers.size>1?'s':'')+
+    (list.length?' · '+CAT_ORDER.filter(c=>byCat[c]).map(c=>esc(CAT_LABEL[c])+' '+byCat[c]).join(' · '):'')+
+    ' · avec source : '+list.filter(r=>r.ev.hasSrc).length+' · avec média : '+list.filter(r=>r.ev.hasMed).length;
+  $('res').innerHTML=''; shown=0; more();
+}
+function more(){
+  const list=RES.results; const end=Math.min(list.length,shown+PAGE);
+  let h=''; for(let i=shown;i<end;i++) h+=cardHtml(list[i]);
+  if(shown===0 && !list.length) h='<div class="empty">Aucun événement ne correspond. Essayez moins de mots-clés, le mode OU, ou élargissez « Où chercher ».</div>';
+  $('res').insertAdjacentHTML('beforeend',h);
+  shown=end; $('more').hidden = shown>=list.length;
+  $('moreb').textContent='Afficher la suite ('+(list.length-shown)+' restants)';
+}
+$('res').addEventListener('toggle',e=>{
+  const d=e.target; if(!d.classList||!d.classList.contains('fiche')||!d.open) return;
+  const b=d.querySelector('.fbody'); if(b.dataset.done) return;
+  b.innerHTML=ficheHtml(d.dataset.pid,d.dataset.uid); b.dataset.done='1';
+},true);
+$('moreb').onclick=more;
+
+let timer=null; const later=()=>{ clearTimeout(timer); timer=setTimeout(run,300); };
+$('q').addEventListener('input',later); $('q').addEventListener('keydown',e=>{ if(e.key==='Enter'){ clearTimeout(timer); run(); } });
+['mode','phon','splitsp','nodate','yfrom','yto','srcf','medf','sort'].forEach(id=>$(id).addEventListener('change',run));
+['yfrom','yto'].forEach(id=>$(id).addEventListener('input',later));
+document.querySelectorAll('[data-sc]').forEach(c=>c.addEventListener('change',run));
+$('go').onclick=run;
+$('reset').onclick=()=>{
+  $('q').value=''; $('mode').value='AND'; $('phon').checked=true; $('splitsp').checked=false; $('nodate').checked=true;
+  $('yfrom').value=''; $('yto').value=''; $('srcf').value='all'; $('medf').value='all'; $('sort').value='rel';
+  document.querySelectorAll('[data-sc]').forEach(c=>c.checked=true);
+  document.querySelectorAll('#cats input').forEach(c=>c.checked=true);
+  run();
+};
+
+function csvCell(s){ return '"'+String(s==null?'':s).replace(/"/g,'""').replace(/\r?\n/g,' ')+'"'; }
+$('csv').onclick=()=>{
+  if(!RES) return;
+  const rows=[['Type','Libellé','Date','Lieu','Personnes','Proches','A une source','Sources','Fichiers médias','Détails','Notes','Correspondances']];
+  for(const r of RES.results){
+    const ev=r.ev;
+    rows.push([CAT_LABEL[ev.cat],ev.label,ev.date,fmtPlace(ev.place),
+      ev.people.map(x=>DB.P[x.id].disp+' '+DB.P[x.id].life+' ['+shortId(x.id)+']'+(x.role?' ('+x.role+')':'')).join(' ; '),
+      '',
+      ev.cat==='fiche'?'':(ev.hasSrc?'oui':'non'),
+      ev.cites.map(c=>c.title+(c.page?' — '+c.page:'')+(c.quay!==''?' (QUAY '+c.quay+')':'')).join(' ; '),
+      ev.medAll.map(m=>baseName(m.file)).join(' ; '),
+      [ev.type,ev.value,ev.cause,ev.agency,ev.age,ev.addr].filter(Boolean).join(' | '),
+      ev.notes.join(' | '),
+      r.why.map(w=>w.term+' → '+w.fields.map(f=>FIELD_LABEL[f]).join('/')).join(' ; ')]);
+  }
+  const blob=new Blob(['﻿'+rows.map(r=>r.map(csvCell).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='recherche_indices.csv'; document.body.appendChild(a); a.click(); a.remove();
+};
+
+// ----- chargement -----
+function loadFile(file){
+  $('dzt').textContent='Lecture de '+file.name+' …'; $('dzs').textContent='';
+  file.arrayBuffer().then(buf=>{
+    setTimeout(()=>{
+      try{
+        const t0=performance.now();
+        DB=buildDB(parseGedcom(decodeBuffer(buf)));
+        const dt=((performance.now()-t0)/1000).toFixed(1);
+        const nSrc=DB.events.filter(e=>e.hasSrc).length, nMed=DB.events.filter(e=>e.hasMed).length;
+        $('dzt').textContent=file.name;
+        $('dzs').textContent='Chargé en '+dt+' s — cliquez ou déposez un autre fichier pour le remplacer';
+        $('stats').innerHTML=['indi:individus','fam:familles'].map(s=>{const [k,l]=s.split(':'); return '<span>'+DB.counts[k]+' '+l+'</span>';}).join('')+
+          '<span>'+DB.events.length+' événements</span><span>'+nSrc+' avec source</span><span>'+nMed+' avec média</span><span>'+DB.counts.sour+' sources</span><span>'+DB.counts.obje+' objets média</span>';
+        const tot={}; for(const e of DB.events) tot[e.cat]=(tot[e.cat]||0)+1;
+        $('cats').innerHTML=CAT_ORDER.filter(c=>tot[c]).map(c=>'<label class="chip"><input type="checkbox" value="'+c+'" checked> '+esc(CAT_LABEL[c])+' <small>'+tot[c]+'</small></label>').join('');
+        document.querySelectorAll('#cats input').forEach(c=>c.addEventListener('change',run));
+        $('panel').hidden=false; run(); $('q').focus();
+      }catch(err){ $('dzt').textContent='Erreur de lecture'; $('dzs').textContent=String(err&&err.message||err); console.error(err); }
+    },30);
+  });
+}
+const dz=$('dz');
+dz.onclick=()=>$('file').click();
+dz.onkeydown=e=>{ if(e.key==='Enter'||e.key===' ') $('file').click(); };
+$('file').onchange=e=>{ if(e.target.files[0]) loadFile(e.target.files[0]); };
+['dragenter','dragover'].forEach(t=>dz.addEventListener(t,e=>{ e.preventDefault(); dz.classList.add('over'); }));
+['dragleave','drop'].forEach(t=>dz.addEventListener(t,e=>{ e.preventDefault(); dz.classList.remove('over'); }));
+dz.addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(f) loadFile(f); });
+window.addEventListener('dragover',e=>e.preventDefault()); window.addEventListener('drop',e=>e.preventDefault());
+window.__app={run,get DB(){return DB;},get RES(){return RES;}};
+}
+</script>
+</body>
+</html>
