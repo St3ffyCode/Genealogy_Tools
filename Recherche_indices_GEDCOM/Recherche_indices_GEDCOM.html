@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Recherche d'indices GEDCOM</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='11' fill='%232f5d8a'/%3E%3Ccircle cx='20' cy='20' r='14' fill='%23fff' stroke='%23fff' stroke-width='2'/%3E%3Cpath d='M20 27v-6M20 21l-6-7M20 21l6-7' stroke='%232f5d8a' stroke-width='2.4' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='20' cy='27' r='3' fill='%232f5d8a'/%3E%3Ccircle cx='14' cy='13.5' r='3' fill='%232f5d8a'/%3E%3Ccircle cx='26' cy='13.5' r='3' fill='%232f5d8a'/%3E%3Cpath d='M30.5 30.5l11 11' stroke='%23fff' stroke-width='5.5' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
 :root{
   --bg:#f5f3ee;--panel:#ffffff;--ink:#1f2328;--mut:#6a717a;--line:#e1ddd3;--acc:#2f5d8a;--accbg:#e8f0f8;
@@ -15,9 +16,12 @@
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
-h1{font-size:22px;margin:0 0 4px}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 60px;position:relative}
+.ver{position:absolute;top:22px;right:16px;font-size:12.5px;font-weight:650;color:var(--acc);background:var(--accbg);border-radius:999px;padding:2px 10px}
+h1{font-size:22px;margin:0 0 6px;padding-right:70px;display:flex;align-items:center;gap:12px}
+.logo{width:52px;height:52px;flex:none}
 .sub{color:var(--mut);margin:0 0 16px}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:0 0 10px;font-weight:650}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
 #dz{border:2px dashed var(--line);text-align:center;cursor:pointer;padding:22px 16px}
 #dz.over{border-color:var(--acc);background:var(--accbg)}
@@ -83,12 +87,27 @@ table.t tr.cur td{background:var(--accbg)}
 .empty{text-align:center;color:var(--mut);padding:30px}
 .more{text-align:center;margin:12px}
 .mini{font-size:13px;color:var(--mut)}
-@media (max-width:640px){.flags{margin-left:0}}
+footer{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);text-align:center;color:var(--mut);font-size:13px}
+.hidebtn{font-size:12.5px;padding:2px 10px;white-space:nowrap}
+.ev.masked{padding:7px 14px;opacity:.78}
+.ev.masked .det,.ev.masked .src,.ev.masked .why,.ev.masked details.fiche,.ev.masked .rel{display:none}
+.ev.masked .ppl{margin-top:3px}
+#hidwrap{margin-top:28px;border-top:2px dashed var(--line);padding-top:14px}
+#hidwrap h2{font-size:15px;margin:0 0 10px;display:flex;align-items:center;gap:12px}
+#hidwrap h2 button{font-size:12.5px;padding:2px 10px;font-weight:400}
+@media (max-width:640px){.flags{margin-left:0}.hidebtn{margin-left:auto}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Recherche d'indices dans un GEDCOM</h1>
+  <span class="ver" title="Version">V1.0</span>
+  <h1><svg class="logo" viewBox="0 0 48 48" role="img" aria-label="Logo : loupe sur un arbre généalogique">
+    <rect width="48" height="48" rx="11" fill="var(--acc)"/>
+    <circle cx="20" cy="20" r="14" fill="#fff" stroke="#fff" stroke-width="2"/>
+    <g stroke="var(--acc)" stroke-width="2.4" stroke-linecap="round" fill="none"><path d="M20 27v-6M20 21l-6-7M20 21l6-7"/></g>
+    <g fill="var(--acc)"><circle cx="20" cy="27" r="3"/><circle cx="14" cy="13.5" r="3"/><circle cx="26" cy="13.5" r="3"/></g>
+    <path d="M30.5 30.5l11 11" stroke="#fff" stroke-width="5.5" stroke-linecap="round"/>
+  </svg><span>Recherche d'indices dans un GEDCOM</span></h1>
   <p class="sub">Déposez le GEDCOM, saisissez un ou plusieurs mots-clés (nom, rue, lieu…) : l'outil liste les événements concernés, avec leur type, les personnes, les sources et les médias associés. Tout est traité localement dans le navigateur (aucun envoi).</p>
 
   <div class="card" id="dz" tabindex="0">
@@ -98,59 +117,80 @@ table.t tr.cur td{background:var(--accbg)}
     <input type="file" id="file" accept=".ged,.gedcom,.txt,text/plain" hidden>
   </div>
 
-  <div class="card" id="panel" hidden>
-    <div class="row">
-      <div class="col grow">
-        <span class="t">Mots-clés</span>
-        <input type="text" id="q" placeholder="ex : Dupont, rue de la gare" autocomplete="off" spellcheck="false">
+  <div id="panel" hidden>
+    <div class="card" id="cardkw">
+      <h2>Mots-clés</h2>
+      <div class="row">
+        <div class="col grow">
+          <span class="t">Mots-clés</span>
+          <input type="text" id="q" placeholder="ex : Dupont, rue de la gare" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="col">
+          <span class="t">Association</span>
+          <select id="mode"><option value="AND">ET (tous les mots-clés)</option><option value="OR">OU (au moins un)</option></select>
+        </div>
+        <div class="col"><span class="t">&nbsp;</span><div><button class="pri" id="go">Rechercher</button></div></div>
       </div>
-      <div class="col">
-        <span class="t">Association</span>
-        <select id="mode"><option value="AND">ET (tous les mots-clés)</option><option value="OR">OU (au moins un)</option></select>
+      <div class="row">
+        <label class="chk"><input type="checkbox" id="phon" checked> Variantes phonétiques (W/V, oe/ö, ff/f, ai/ei, y/i…)</label>
+        <label class="chk"><input type="checkbox" id="splitsp"> Un espace sépare deux mots-clés</label>
       </div>
-      <div class="col"><span class="t">Année de</span><input type="number" id="yfrom" placeholder="1900"></div>
-      <div class="col"><span class="t">à</span><input type="number" id="yto" placeholder="1910"></div>
+      <details class="help"><summary>Aide sur la saisie</summary>
+        Séparez les mots-clés par une virgule : <code>Dupont, rue de la gare</code>. Chaque mot-clé est une expression cherchée telle quelle (accents et majuscules ignorés).
+        Préfixer par <code>-</code> exclut les événements contenant ce mot. « Variantes phonétiques » rapproche par exemple Meyer / Meier / Mayer ; il peut aussi ajouter des faux positifs.
+        La zone « Où chercher » permet de limiter la recherche (ex. seulement le lieu). La ligne « Correspondances » de chaque résultat indique où chaque mot-clé a été trouvé.
+        Le bouton « Masquer » d'un résultat le range en bas de page, dans la zone « Masqués », pour ne garder à l'écran que les événements qui vous intéressent.
+      </details>
     </div>
-    <div class="row">
-      <label class="chk"><input type="checkbox" id="phon" checked> Variantes phonétiques (W/V, oe/ö, ff/f, ai/ei, y/i…)</label>
-      <label class="chk"><input type="checkbox" id="splitsp"> Un espace sépare deux mots-clés</label>
-      <label class="chk"><input type="checkbox" id="nodate" checked> Inclure les événements sans date</label>
-    </div>
-    <div class="row">
-      <div class="col"><span class="t">Où chercher</span>
-        <div>
-          <label class="chk"><input type="checkbox" data-sc="place" checked> Lieu / adresse</label>
-          <label class="chk"><input type="checkbox" data-sc="name" checked> Nom de la personne</label>
-          <label class="chk"><input type="checkbox" data-sc="prox" checked> Noms des proches (parents, conjoints, enfants)</label>
-          <label class="chk"><input type="checkbox" data-sc="date" checked> Date</label>
-          <label class="chk"><input type="checkbox" data-sc="txt" checked> Libellé / cause / notes</label>
-          <label class="chk"><input type="checkbox" data-sc="src" checked> Sources &amp; fichiers médias</label>
+
+    <div class="card" id="cardwh">
+      <h2>Où chercher &amp; types d'événements</h2>
+      <div class="row">
+        <div class="col"><span class="t">Où chercher</span>
+          <div>
+            <label class="chk"><input type="checkbox" data-sc="place" checked> Lieu / adresse</label>
+            <label class="chk"><input type="checkbox" data-sc="name" checked> Nom de la personne</label>
+            <label class="chk"><input type="checkbox" data-sc="prox" checked> Noms des proches (parents, conjoints, enfants)</label>
+            <label class="chk"><input type="checkbox" data-sc="date" checked> Date</label>
+            <label class="chk"><input type="checkbox" data-sc="txt" checked> Libellé / cause / notes</label>
+            <label class="chk"><input type="checkbox" data-sc="src" checked> Sources &amp; fichiers médias</label>
+          </div>
         </div>
       </div>
+      <div class="row">
+        <div class="col grow"><span class="t">Types d'événements</span><div class="chips" id="cats"></div></div>
+      </div>
     </div>
-    <div class="row">
-      <div class="col grow"><span class="t">Types d'événements</span><div class="chips" id="cats"></div></div>
+
+    <div class="card" id="cardfl">
+      <h2>Filtres</h2>
+      <div class="row">
+        <div class="col"><span class="t">Année de</span><input type="number" id="yfrom" placeholder="1900"></div>
+        <div class="col"><span class="t">à</span><input type="number" id="yto" placeholder="1910"></div>
+        <div class="col"><span class="t">Genre</span>
+          <select id="sexf"><option value="all">Tous</option><option value="M">Homme</option><option value="F">Femme</option></select></div>
+        <div class="col"><span class="t">Source</span>
+          <select id="srcf"><option value="all">Toutes</option><option value="with">Avec source</option><option value="without">Sans source</option></select></div>
+        <div class="col"><span class="t">Média</span>
+          <select id="medf"><option value="all">Tous</option><option value="with">Avec média</option><option value="without">Sans média</option></select></div>
+        <div class="col"><span class="t">Tri</span>
+          <select id="sort"><option value="rel">Pertinence</option><option value="dateA">Date ↑</option><option value="dateD">Date ↓</option><option value="type">Type</option><option value="place">Lieu</option><option value="name">Nom</option></select></div>
+      </div>
+      <div class="row">
+        <label class="chk"><input type="checkbox" id="nodate" checked> Inclure les événements sans date</label>
+        <div><button id="reset">Réinitialiser</button> <button id="csv">Export CSV</button></div>
+      </div>
     </div>
-    <div class="row">
-      <div class="col"><span class="t">Source</span>
-        <select id="srcf"><option value="all">Toutes</option><option value="with">Avec source</option><option value="without">Sans source</option></select></div>
-      <div class="col"><span class="t">Média</span>
-        <select id="medf"><option value="all">Tous</option><option value="with">Avec média</option><option value="without">Sans média</option></select></div>
-      <div class="col"><span class="t">Tri</span>
-        <select id="sort"><option value="rel">Pertinence</option><option value="dateA">Date ↑</option><option value="dateD">Date ↓</option><option value="type">Type</option><option value="place">Lieu</option><option value="name">Nom</option></select></div>
-      <div class="col"><span class="t">&nbsp;</span>
-        <div><button class="pri" id="go">Rechercher</button> <button id="reset">Réinitialiser</button> <button id="csv">Export CSV</button></div></div>
-    </div>
-    <details class="help"><summary>Aide sur la saisie</summary>
-      Séparez les mots-clés par une virgule : <code>Dupont, rue de la gare</code>. Chaque mot-clé est une expression cherchée telle quelle (accents et majuscules ignorés).
-      Préfixer par <code>-</code> exclut les événements contenant ce mot. « Variantes phonétiques » rapproche par exemple Meyer / Meier / Mayer ; il peut aussi ajouter des faux positifs.
-      La zone « Où chercher » permet de limiter la recherche (ex. seulement le lieu). La ligne « Correspondances » de chaque résultat indique où chaque mot-clé a été trouvé.
-    </details>
   </div>
 
   <div id="sum"></div>
   <div id="res"></div>
   <div class="more" id="more" hidden><button id="moreb">Afficher la suite</button></div>
+  <div id="hidwrap" hidden>
+    <h2>Masqués (<span id="hidn">0</span>) <button id="unhideall">Tout rétablir</button></h2>
+    <div id="hid"></div>
+  </div>
+  <footer>© 2026 St3ffyCode — Recherche d'indices GEDCOM V1.0 · Licence MIT</footer>
 </div>
 
 <script>
@@ -353,7 +393,7 @@ function buildDB(root){
   for(const r of root.kids){
     if(r.tag==='INDI' && r.id){
       counts.indi++;
-      const p={id:r.id,names:[],sex:sub(r,'SEX'),famc:[],fams:[],events:[],notes:[],cites:[],media:[]};
+      const p={id:r.id,names:[],sex:(sub(r,'SEX')||'').trim().toUpperCase().slice(0,1),famc:[],fams:[],events:[],notes:[],cites:[],media:[]};
       for(const k of r.kids){
         switch(k.tag){
           case 'NAME': p.names.push(parseName(k)); break;
@@ -481,6 +521,7 @@ function search(DB,o){
     if(o.src==='without' && ev.hasSrc) continue;
     if(o.med==='with' && !ev.hasMed) continue;
     if(o.med==='without' && ev.hasMed) continue;
+    if(o.sex==='M' || o.sex==='F'){ if(!ev.people.some(x=>DB.P[x.id] && DB.P[x.id].sex===o.sex)) continue; }
     let score=0; const why=[];
     if(pos.length){
       let nm=0, fail=false;
@@ -521,7 +562,7 @@ function search(DB,o){
 // ===================================================================
 if(typeof document!=='undefined'){
 const $=id=>document.getElementById(id);
-let DB=null, RES=null, shown=0;
+let DB=null, RES=null, shown=0; const HIDDEN=new Set();
 const PAGE=60;
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -588,17 +629,17 @@ function citeHtml(c){
   if(c.media.length) s+='<div>'+c.media.map(m=>mediaChip({...m,origin:m.origin})).join('<br>')+'</div>';
   return s+'</li>';
 }
-function cardHtml(r){
+function cardHtml(r,masked){
   const ev=r.ev;
   const flags=[];
   if(ev.cat!=='fiche'){
     flags.push(ev.hasSrc ? '<span class="flag ok">✔ Source'+(ev.cites.length>1?' ×'+ev.cites.length:'')+'</span>' : '<span class="flag no">✖ Sans source</span>');
   }
   if(ev.hasMed) flags.push('<span class="flag med">📎 '+ev.medAll.length+' média'+(ev.medAll.length>1?'s':'')+' ('+[...new Set(ev.medAll.map(m=>(extOf(m.file)||'?').toUpperCase()))].join(', ')+')</span>');
-  let h='<article class="ev c-'+ev.cat+'" data-uid="'+ev.uid+'"><div class="ev-head"><span class="badge c-'+ev.cat+'">'+esc(ev.label)+'</span>';
+  let h='<article class="ev c-'+ev.cat+(masked?' masked':'')+'" data-uid="'+ev.uid+'"><div class="ev-head"><span class="badge c-'+ev.cat+'">'+esc(ev.label)+'</span>';
   h+='<span class="date">'+(ev.date?hl(ev.date):'<span class="life">sans date</span>')+'</span>';
   const pl=fmtPlace(ev.place); if(pl) h+='<span class="place">'+hl(pl)+'</span>';
-  h+='<span class="flags">'+flags.join('')+'</span></div>';
+  h+='<span class="flags">'+flags.join('')+'</span><button class="hidebtn" data-uid="'+ev.uid+'" title="'+(masked?'Remettre ce résultat dans la liste':'Ranger ce résultat en bas de page')+'">'+(masked?'Rétablir':'Masquer')+'</button></div>';
   h+='<div class="ppl">'+ev.people.map(x=>personLine(x.id,x.role)).join('')+relHtml(ev)+'</div>';
   const det=[];
   if(ev.type && ev.tag!=='EVEN' && ev.tag!=='FACT') det.push(['Type',ev.type]);
@@ -613,7 +654,7 @@ function cardHtml(r){
   if(ev.cites.length) h+='<ul class="src">'+ev.cites.map(citeHtml).join('')+'</ul>';
   if(ev.media.length) h+='<div class="det">'+ev.media.map(m=>'<div>'+mediaChip(m)+'</div>').join('')+'</div>';
   if(r.why.length) h+='<div class="why">Correspondances : '+r.why.map(w=>'<span>« '+esc(w.term)+' » → '+w.fields.map(f=>FIELD_LABEL[f]).join(', ')+'</span>').join('')+'</div>';
-  const pids=ev.people.map(x=>x.id);
+  const pids=masked?[]:ev.people.map(x=>x.id);
   if(pids.length) h+=pids.map(pid=>'<details class="fiche" data-pid="'+esc(pid)+'" data-uid="'+ev.uid+'"><summary>Fiche complète — '+esc(DB.P[pid].disp)+'</summary><div class="fbody"></div></details>').join('');
   return h+'</article>';
 }
@@ -635,27 +676,47 @@ function opts(){
   const scope={}; document.querySelectorAll('[data-sc]').forEach(c=>scope[c.dataset.sc]=c.checked);
   const cats=new Set(); document.querySelectorAll('#cats input').forEach(c=>{ if(c.checked) cats.add(c.value); });
   return {q:$('q').value,mode:$('mode').value,phon:$('phon').checked,splitSpaces:$('splitsp').checked,scope,cats,
-    yFrom:$('yfrom').value,yTo:$('yto').value,incNoDate:$('nodate').checked,src:$('srcf').value,med:$('medf').value,sort:$('sort').value};
+    yFrom:$('yfrom').value,yTo:$('yto').value,incNoDate:$('nodate').checked,src:$('srcf').value,med:$('medf').value,sex:$('sexf').value,sort:$('sort').value};
 }
-function run(){
-  if(!DB) return;
-  RES=search(DB,opts());
-  const list=RES.results;
+function renderLists(keep){
+  const all=RES.results;
+  RES.vis=all.filter(r=>!HIDDEN.has(r.ev.uid));
+  RES.hid=all.filter(r=>HIDDEN.has(r.ev.uid));
+  const list=RES.vis;
   const byCat={}; const pers=new Set();
   for(const r of list){ byCat[r.ev.cat]=(byCat[r.ev.cat]||0)+1; for(const x of r.ev.people) pers.add(x.id); }
   $('sum').innerHTML = '<b>'+list.length+'</b> événement'+(list.length>1?'s':'')+' — <b>'+pers.size+'</b> personne'+(pers.size>1?'s':'')+
     (list.length?' · '+CAT_ORDER.filter(c=>byCat[c]).map(c=>esc(CAT_LABEL[c])+' '+byCat[c]).join(' · '):'')+
-    ' · avec source : '+list.filter(r=>r.ev.hasSrc).length+' · avec média : '+list.filter(r=>r.ev.hasMed).length;
-  $('res').innerHTML=''; shown=0; more();
+    ' · avec source : '+list.filter(r=>r.ev.hasSrc).length+' · avec média : '+list.filter(r=>r.ev.hasMed).length+
+    (RES.hid.length?' · <b>'+RES.hid.length+'</b> masqué'+(RES.hid.length>1?'s':'')+' (en bas de page)':'');
+  const target=keep?Math.max(PAGE,shown):PAGE;
+  $('res').innerHTML=''; shown=0; more(target);
+  $('hid').innerHTML=RES.hid.map(r=>cardHtml(r,true)).join('');
+  $('hidwrap').hidden=!HIDDEN.size;
+  $('hidn').textContent=RES.hid.length+(HIDDEN.size>RES.hid.length?' + '+(HIDDEN.size-RES.hid.length)+' hors recherche':'');
 }
-function more(){
-  const list=RES.results; const end=Math.min(list.length,shown+PAGE);
+function run(){
+  if(!DB) return;
+  RES=search(DB,opts());
+  renderLists(false);
+}
+function more(n){
+  const list=RES.vis; const end=Math.min(list.length,shown+(n||PAGE));
   let h=''; for(let i=shown;i<end;i++) h+=cardHtml(list[i]);
-  if(shown===0 && !list.length) h='<div class="empty">Aucun événement ne correspond. Essayez moins de mots-clés, le mode OU, ou élargissez « Où chercher ».</div>';
+  if(shown===0 && !list.length) h='<div class="empty">'+(RES.hid.length?'Tous les résultats sont masqués (voir en bas de page).':'Aucun événement ne correspond. Essayez moins de mots-clés, le mode OU, ou élargissez « Où chercher ».')+'</div>';
   $('res').insertAdjacentHTML('beforeend',h);
   shown=end; $('more').hidden = shown>=list.length;
   $('moreb').textContent='Afficher la suite ('+(list.length-shown)+' restants)';
 }
+function toggleHide(e){
+  const b=e.target.closest&&e.target.closest('button.hidebtn'); if(!b) return;
+  const uid=+b.dataset.uid;
+  if(HIDDEN.has(uid)) HIDDEN.delete(uid); else HIDDEN.add(uid);
+  renderLists(true);
+}
+$('res').addEventListener('click',toggleHide);
+$('hid').addEventListener('click',toggleHide);
+$('unhideall').onclick=()=>{ HIDDEN.clear(); renderLists(true); };
 $('res').addEventListener('toggle',e=>{
   const d=e.target; if(!d.classList||!d.classList.contains('fiche')||!d.open) return;
   const b=d.querySelector('.fbody'); if(b.dataset.done) return;
@@ -665,13 +726,13 @@ $('moreb').onclick=more;
 
 let timer=null; const later=()=>{ clearTimeout(timer); timer=setTimeout(run,300); };
 $('q').addEventListener('input',later); $('q').addEventListener('keydown',e=>{ if(e.key==='Enter'){ clearTimeout(timer); run(); } });
-['mode','phon','splitsp','nodate','yfrom','yto','srcf','medf','sort'].forEach(id=>$(id).addEventListener('change',run));
+['mode','phon','splitsp','nodate','yfrom','yto','sexf','srcf','medf','sort'].forEach(id=>$(id).addEventListener('change',run));
 ['yfrom','yto'].forEach(id=>$(id).addEventListener('input',later));
 document.querySelectorAll('[data-sc]').forEach(c=>c.addEventListener('change',run));
 $('go').onclick=run;
 $('reset').onclick=()=>{
   $('q').value=''; $('mode').value='AND'; $('phon').checked=true; $('splitsp').checked=false; $('nodate').checked=true;
-  $('yfrom').value=''; $('yto').value=''; $('srcf').value='all'; $('medf').value='all'; $('sort').value='rel';
+  $('yfrom').value=''; $('yto').value=''; $('srcf').value='all'; $('medf').value='all'; $('sexf').value='all'; $('sort').value='rel';
   document.querySelectorAll('[data-sc]').forEach(c=>c.checked=true);
   document.querySelectorAll('#cats input').forEach(c=>c.checked=true);
   run();
@@ -681,7 +742,7 @@ function csvCell(s){ return '"'+String(s==null?'':s).replace(/"/g,'""').replace(
 $('csv').onclick=()=>{
   if(!RES) return;
   const rows=[['Type','Libellé','Date','Lieu','Personnes','Proches','A une source','Sources','Fichiers médias','Détails','Notes','Correspondances']];
-  for(const r of RES.results){
+  for(const r of RES.vis){
     const ev=r.ev;
     rows.push([CAT_LABEL[ev.cat],ev.label,ev.date,fmtPlace(ev.place),
       ev.people.map(x=>DB.P[x.id].disp+' '+DB.P[x.id].life+' ['+shortId(x.id)+']'+(x.role?' ('+x.role+')':'')).join(' ; '),
@@ -704,7 +765,7 @@ function loadFile(file){
     setTimeout(()=>{
       try{
         const t0=performance.now();
-        DB=buildDB(parseGedcom(decodeBuffer(buf)));
+        DB=buildDB(parseGedcom(decodeBuffer(buf))); HIDDEN.clear(); $('hidwrap').hidden=true;
         const dt=((performance.now()-t0)/1000).toFixed(1);
         const nSrc=DB.events.filter(e=>e.hasSrc).length, nMed=DB.events.filter(e=>e.hasMed).length;
         $('dzt').textContent=file.name;

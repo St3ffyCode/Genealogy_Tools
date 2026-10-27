@@ -1,4 +1,4 @@
-# Recherche d'indices GEDCOM
+# Recherche d'indices GEDCOM — V1.0
 
 Retrouve, dans un arbre généalogique, les événements qui correspondent à un indice : un nom, une rue, un lieu, une période.
 
@@ -13,6 +13,7 @@ C'est un **fichier HTML unique** : rien à installer, rien à configurer. Tout s
 - [Utilisation](#utilisation)
 - [Saisir les mots-clés](#saisir-les-mots-clés)
 - [Filtres](#filtres)
+- [Masquer un résultat](#masquer-un-résultat)
 - [Lire un résultat](#lire-un-résultat)
 - [Règles de lecture du GEDCOM](#règles-de-lecture-du-gedcom)
 - [Export CSV](#export-csv)
@@ -66,7 +67,10 @@ GitHub est le site où se trouve l'outil. Il suffit de récupérer **un seul fic
 1. Ouvrez `Recherche_indices_GEDCOM.html` par un double-clic, ou glissez-le dans le navigateur.
 2. Déposez votre fichier `.ged` sur la zone prévue, ou cliquez dessus pour le choisir. Le nombre d'individus, de familles, d'événements, de sources et de médias s'affiche.
 3. Saisissez un ou plusieurs mots-clés. La recherche se lance en cours de frappe, ou avec Entrée ou le bouton *Rechercher*.
-4. Affinez avec les filtres, puis parcourez les résultats. Ils s'affichent par pages de 60 ; un bouton affiche la suite.
+4. Affinez avec la carte **Filtres**, puis parcourez les résultats. Ils s'affichent par pages de 60 ; un bouton affiche la suite.
+5. Rangez avec **Masquer** les résultats sans intérêt (voir [Masquer un résultat](#masquer-un-résultat)).
+
+L'écran comporte trois cartes : **Mots-clés** (saisie, aide, association, variantes phonétiques), **Où chercher & types d'événements**, et **Filtres** (années, genre, source, média, tri).
 
 Pour changer de fichier, déposez-en un autre sur la même zone.
 
@@ -118,12 +122,21 @@ Pour retrouver une rue sans être gêné par un homonyme, ne cochez que *Lieu / 
 ## Filtres
 
 - **Années** : de / à. Un événement est retenu si sa période croise l'intervalle demandé. Sont lues les dates `12 MAR 1890`, `MAR 1890`, `1890`, avec les préfixes `ABT`, `CAL`, `EST`, `BEF`, `AFT`, et les plages `BET … AND …` et `FROM … TO …` (les formes françaises *avant* et *après* aussi). *Inclure les événements sans date* est coché par défaut.
-- **Types d'événements** : naissance, baptême, mariage (avec bans, contrat, fiançailles), décès, inhumation ou crémation, divorce, autres événements, et notes ou sources rattachées à une fiche. Le nombre d'événements de chaque type est affiché.
+- **Genre** : tous, homme, femme, d'après la balise `SEX` de la fiche. Une personne sans `SEX` n'apparaît ni avec « Homme » ni avec « Femme ». Pour un mariage ou un divorce, l'événement est conservé si l'un des deux conjoints correspond : le filtre « Femme » garde donc les mariages où l'épouse est renseignée comme femme.
+- **Types d'événements** (carte *Où chercher & types d'événements*) : naissance, baptême, mariage (avec bans, contrat, fiançailles), décès, inhumation ou crémation, divorce, autres événements, et notes ou sources rattachées à une fiche. Le nombre d'événements de chaque type est affiché.
 - **Source** : toutes, avec source, sans source.
 - **Média** : tous, avec média, sans média.
 - **Tri** : pertinence, date croissante ou décroissante, type, lieu, nom. La pertinence compte davantage un mot-clé trouvé dans le lieu ou le nom que dans un proche ou une source.
 
-Le bouton *Réinitialiser* remet tous les réglages à zéro.
+Le bouton *Réinitialiser* remet tous les réglages à zéro ; il ne rétablit pas les résultats masqués.
+
+## Masquer un résultat
+
+Chaque résultat a un bouton **Masquer** en haut à droite. La carte est alors rangée dans la zone **Masqués**, en bas de page, sous une forme réduite (type, date, lieu, personnes). Elle sort des compteurs et de l'export CSV.
+
+- **Rétablir** remet la carte dans la liste ; **Tout rétablir** vide la zone Masqués.
+- Un résultat masqué le reste quand vous relancez une recherche (il apparaît alors dans Masqués s'il correspond encore).
+- La liste des masqués n'est pas conservée : elle est perdue si vous rechargez la page ou chargez un autre GEDCOM.
 
 ## Lire un résultat
 
@@ -157,7 +170,7 @@ En tête de liste, un résumé donne le nombre d'événements et de personnes, l
 
 ## Export CSV
 
-Le bouton *Export CSV* enregistre les résultats courants dans `recherche_indices.csv` (séparateur `;`, UTF-8 avec BOM, lisible dans Excel) : type, libellé, date, lieu, personnes, présence de source, sources, fichiers médias, détails, notes et correspondances.
+Le bouton *Export CSV* enregistre les résultats courants non masqués dans `recherche_indices.csv` (séparateur `;`, UTF-8 avec BOM, lisible dans Excel) : type, libellé, date, lieu, personnes, présence de source, sources, fichiers médias, détails, notes et correspondances.
 
 ## Confidentialité
 
